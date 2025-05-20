@@ -19,6 +19,31 @@ def generate_rsa_keys():
     public_key = private_key.public_key()
     return private_key, public_key
 
+# Tampilkan RSA key dalam bentuk PEM
+def display_keys(private_key, public_key):
+    private_pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+    
+    public_pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+
+    print("\n===== PUBLIC KEY =====")
+    print(public_pem.decode())
+    print("===== PRIVATE KEY =====")
+    print(private_pem.decode())
+
+    # Jika ingin disimpan ke file
+    with open("public_key.pem", "wb") as f:
+        f.write(public_pem)
+    with open("private_key.pem", "wb") as f:
+        f.write(private_pem)
+
+
 # 2. Encrypt Data with RSA
 def encrypt_data(public_key, data):
     ciphertext = public_key.encrypt(
@@ -179,38 +204,51 @@ def decrypt_qr_data(private_key, compressed_data):
 # Main Program
 def main():
     try:
+        print("=== ENCRYPTION STAGE ===")
         input_text = input("Enter text to encrypt: ")
-        
+
+        # 1. Generate RSA Key
         private_key, public_key = generate_rsa_keys()
+        display_keys(private_key, public_key)
+
+        # 2. Encrypt Text
         encrypted_data = encrypt_data(public_key, input_text)
-        print(f"Encrypted Data: {encrypted_data} (Size: {len(encrypted_data)} bytes)")
-        
+        print(f"[Encrypted] Size: {len(encrypted_data)} bytes")
+
         if len(encrypted_data) > 256:
-            raise ValueError("Data enkripsi melebihi ukuran RSA 2048-bit (256 byte).")
-        
+            raise ValueError("Encrypted data exceeds RSA 2048-bit limit (256 bytes).")
+
+        # 3. Generate QR Code
+        print("=== QR CODE GENERATION ===")
         qr_path = create_qr_code(encrypted_data)
         compressed_data = process_qr_image(qr_path)
-        print(f"Compressed Data Size: {len(compressed_data)} bytes")
-        
+        print(f"[QR] Compressed size: {len(compressed_data)} bytes")
+
+        # 4. Embed QR into Audio
+        print("=== AUDIO STEGANOGRAPHY (EMBED) ===")
         audio_path = input("Enter path to WAV audio file: ")
         expected_bit_length = len(compressed_data) * 8
-        
         stego_audio = embed_data_in_audio(audio_path, compressed_data)
-        print(f"Stego audio saved as: {stego_audio}")
-        
+        print(f"[Stego] Audio saved: {stego_audio}")
+
+        # 5. Extract from Stego Audio
+        print("=== AUDIO STEGANOGRAPHY (EXTRACT) ===")
         extracted_data = extract_data_from_audio(stego_audio, expected_bit_length)
-        print(f"Extracted Data Size: {len(extracted_data)} bytes")
-        
+
+        # 6. Reconstruct QR & Decrypt
+        print("=== DECRYPTION STAGE ===")
         decrypted_text = decrypt_qr_data(private_key, extracted_data)
-        print(f"Decrypted Text: {decrypted_text}")
-        print("Verification:", "Success!" if decrypted_text == input_text else "Failed!")
-        
+        print(f"[Decrypted Text] {decrypted_text}")
+        print("=== VERIFICATION ===")
+        print("Result:", "Success ✅" if decrypted_text == input_text else "Failed ❌")
+
     except qrcode.exceptions.DataOverflowError as e:
-        print(f"Error: QR code tidak dapat menampung data yang terlalu besar: {e}")
+        print(f"[Error] QR Code capacity exceeded: {e}")
     except ValueError as e:
-        print(f"Error: {e}")
+        print(f"[Error] {e}")
     except Exception as e:
-        print(f"Error tidak terduga: {e}")
+        print(f"[Unexpected Error] {e}")
+
 
 if __name__ == "__main__":
     main()
