@@ -1,5 +1,5 @@
 from crypto_utils import load_private_key, decrypt_qr_data
-from Fix.stegano_utils import extract_data_from_audio
+from stegano_utils import extract_data_from_audio
 import os
 
 def main():

@@ -1,5 +1,5 @@
 from crypto_utils import generate_rsa_keys, display_keys, encrypt_data, create_qr_code, process_qr_image
-from Fix.stegano_utils import embed_data_in_audio
+from stegano_utils import embed_data_in_audio
 import os
 
 def main():
