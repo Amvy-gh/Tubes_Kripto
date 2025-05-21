@@ -7,12 +7,13 @@ from crypto_utils import generate_rsa_keys, display_keys, encrypt_data, create_q
 from stegano_utils import embed_data_in_audio, extract_data_from_audio
 import sys
 import os
+import base64
 
 class SteganoGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Audio Steganography with RSA & QR")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 800, 650)  # Made window slightly taller
         
         # Set application style
         self.setStyleSheet("""
@@ -99,7 +100,7 @@ class SteganoGUI(QMainWindow):
         encrypt_layout.addWidget(input_label)
         
         self.text_input = QTextEdit()
-        self.text_input.setMinimumHeight(100)
+        self.text_input.setMinimumHeight(80)  # Decreased slightly to make room
         encrypt_layout.addWidget(self.text_input)
 
         # Encrypt button with spacers for centering
@@ -111,6 +112,44 @@ class SteganoGUI(QMainWindow):
         button_layout.addWidget(encrypt_btn)
         button_layout.addStretch(1)
         encrypt_layout.addLayout(button_layout)
+
+        # Ciphertext display area (new addition with separate columns)
+        cipher_section = QVBoxLayout()
+        cipher_section.setSpacing(10)
+        
+        ciphertext_label = QLabel("Encrypted Ciphertext:")
+        ciphertext_label.setAlignment(Qt.AlignLeft)
+        cipher_section.addWidget(ciphertext_label)
+        
+        # Create layout for the two formats side by side
+        cipher_formats_layout = QHBoxLayout()
+        
+        # HEX format column
+        hex_layout = QVBoxLayout()
+        hex_label = QLabel("HEX Format:")
+        hex_label.setStyleSheet("font-weight: bold;")
+        hex_layout.addWidget(hex_label)
+        
+        self.hex_display = QTextEdit()
+        self.hex_display.setReadOnly(True)
+        self.hex_display.setMinimumHeight(70)
+        hex_layout.addWidget(self.hex_display)
+        cipher_formats_layout.addLayout(hex_layout)
+        
+        # BASE64 format column
+        base64_layout = QVBoxLayout()
+        base64_label = QLabel("BASE64 Format:")
+        base64_label.setStyleSheet("font-weight: bold;")
+        base64_layout.addWidget(base64_label)
+        
+        self.base64_display = QTextEdit()
+        self.base64_display.setReadOnly(True)
+        self.base64_display.setMinimumHeight(70)
+        base64_layout.addWidget(self.base64_display)
+        cipher_formats_layout.addLayout(base64_layout)
+        
+        cipher_section.addLayout(cipher_formats_layout)
+        encrypt_layout.addLayout(cipher_section)
 
         # QR code display area with frame
         qr_layout = QHBoxLayout()
@@ -224,6 +263,43 @@ class SteganoGUI(QMainWindow):
         decrypt_btn_layout.addStretch(1)
         decrypt_layout.addLayout(decrypt_btn_layout)
 
+        # Extracted ciphertext display (with separate columns)
+        extracted_section = QVBoxLayout()
+        extracted_section.setSpacing(10)
+        
+        decrypt_cipher_label = QLabel("Extracted Ciphertext:")
+        extracted_section.addWidget(decrypt_cipher_label)
+        
+        # Create layout for the two formats side by side
+        extracted_formats_layout = QHBoxLayout()
+        
+        # HEX format column
+        extracted_hex_layout = QVBoxLayout()
+        extracted_hex_label = QLabel("HEX Format:")
+        extracted_hex_label.setStyleSheet("font-weight: bold;")
+        extracted_hex_layout.addWidget(extracted_hex_label)
+        
+        self.extracted_hex_display = QTextEdit()
+        self.extracted_hex_display.setReadOnly(True)
+        self.extracted_hex_display.setMinimumHeight(70)
+        extracted_hex_layout.addWidget(self.extracted_hex_display)
+        extracted_formats_layout.addLayout(extracted_hex_layout)
+        
+        # BASE64 format column
+        extracted_base64_layout = QVBoxLayout()
+        extracted_base64_label = QLabel("BASE64 Format:")
+        extracted_base64_label.setStyleSheet("font-weight: bold;")
+        extracted_base64_layout.addWidget(extracted_base64_label)
+        
+        self.extracted_base64_display = QTextEdit()
+        self.extracted_base64_display.setReadOnly(True)
+        self.extracted_base64_display.setMinimumHeight(70)
+        extracted_base64_layout.addWidget(self.extracted_base64_display)
+        extracted_formats_layout.addLayout(extracted_base64_layout)
+        
+        extracted_section.addLayout(extracted_formats_layout)
+        decrypt_layout.addLayout(extracted_section)
+
         # QR Display for decryption
         decrypt_qr_layout = QHBoxLayout()
         decrypt_qr_layout.addStretch(1)
@@ -239,7 +315,7 @@ class SteganoGUI(QMainWindow):
         decrypt_layout.addWidget(QLabel("Decrypted Text:"))
         self.decrypted_text = QTextEdit()
         self.decrypted_text.setReadOnly(True)
-        self.decrypted_text.setMinimumHeight(100)
+        self.decrypted_text.setMinimumHeight(80)
         decrypt_layout.addWidget(self.decrypted_text)
 
         # Progress and status for decryption
@@ -268,6 +344,9 @@ class SteganoGUI(QMainWindow):
         self.encrypted_data = None
         self.compressed_data = None
         self.qr_path = None
+        
+        # Set window height to accommodate the new elements
+        self.setGeometry(100, 100, 800, 700)  # Increased height from 650 to 700
 
     def select_audio_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Audio File", "", "WAV Files (*.wav)")
@@ -300,6 +379,23 @@ class SteganoGUI(QMainWindow):
             display_keys(private_key, public_key)
 
             self.encrypted_data = encrypt_data(public_key, text)
+            
+            # Display ciphertext in both formats
+            ciphertext_hex = self.encrypted_data.hex()
+            ciphertext_b64 = base64.b64encode(self.encrypted_data).decode('utf-8')
+            
+            # Truncate hex if too long, with ellipsis in the middle
+            if len(ciphertext_hex) > 100:
+                hex_display = ciphertext_hex[:45] + "..." + ciphertext_hex[-45:]
+            else:
+                hex_display = ciphertext_hex
+                
+            # Update separate displays
+            self.hex_display.setText(hex_display)
+            self.base64_display.setText(ciphertext_b64)
+            
+            self.encrypt_progress.setValue(30)
+            
             self.qr_path = create_qr_code(self.encrypted_data)
             self.compressed_data = process_qr_image(self.qr_path)
 
@@ -328,13 +424,29 @@ class SteganoGUI(QMainWindow):
             if not self.stego_path or not self.private_key_path:
                 raise ValueError("Please select stego audio and private key!")
 
-            self.decrypt_status.setText("Decrypting...")
+            self.decrypt_status.setText("Extracting data from audio...")
             self.decrypt_progress.setValue(20)
 
             private_key = load_private_key(self.private_key_path)
             extracted_data = extract_data_from_audio(self.stego_path, float('inf'))
-
+            
+            # Display the extracted ciphertext in both formats
+            extracted_hex = extracted_data.hex()
+            extracted_b64 = base64.b64encode(extracted_data).decode('utf-8')
+            
+            # Truncate hex if too long, with ellipsis in the middle
+            if len(extracted_hex) > 100:
+                hex_display = extracted_hex[:45] + "..." + extracted_hex[-45:]
+            else:
+                hex_display = extracted_hex
+                
+            # Update separate displays
+            self.extracted_hex_display.setText(hex_display)
+            self.extracted_base64_display.setText(extracted_b64)
+            
             self.decrypt_progress.setValue(50)
+            self.decrypt_status.setText("Decrypting extracted data...")
+            
             decrypted_text = decrypt_qr_data(private_key, extracted_data)
 
             # show QR
