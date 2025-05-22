@@ -2,6 +2,7 @@ from crypto_utils import load_private_key, decrypt_qr_data
 from stegano_utils import extract_data_from_audio
 import os
 
+#
 def main():
     try:
         print("=== DECRYPTION PROCESS ===")

@@ -7,7 +7,7 @@ def main():
         print("=== ENCRYPTION STAGE ===")
         input_text = input("Enter text to encrypt: ")
 
-        # 1. Generate RSA Key
+        # 1. Generate RSA Key   
         print("\n[1] Generating RSA Keys...")
         private_key, public_key = generate_rsa_keys()
         display_keys(private_key, public_key)
@@ -32,10 +32,12 @@ def main():
         audio_path = input("Enter path to WAV audio file: ")
         if not os.path.exists(audio_path):
             raise ValueError(f"Audio file not found: {audio_path}")
-
+        
+        
+        # Check if audio file is large enough
         expected_bit_length = len(compressed_data) * 8
         stego_audio = embed_data_in_audio(audio_path, compressed_data)
-        print(f"\n=== ENCRYPTION COMPLETE! ✅ ===")
+        print(f"\n=== ENCRYPTION COMPLETE!  ===")
         print(f"[+] Original text length: {len(input_text)} characters")
         print(f"[+] Final audio file: {stego_audio}")
         print("\nYou can now share the audio file. To decrypt, you will need:")

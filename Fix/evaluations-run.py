@@ -46,6 +46,7 @@ def main():
     print("\n=== HASIL EVALUASI ===")
     print_formatted_results(results)
 
+# [9] Fungsi untuk mencetak hasil evaluasi
 def print_formatted_results(results):
     print("\n🛡️ [RSA]")
     t = results['rsa']['timing']

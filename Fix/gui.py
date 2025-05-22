@@ -9,6 +9,7 @@ import sys
 import os
 import base64
 
+# Class untuk GUI Steganografi Audio
 class SteganoGUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -347,25 +348,31 @@ class SteganoGUI(QMainWindow):
         
         # Set window height to accommodate the new elements
         self.setGeometry(100, 100, 800, 700)  # Increased height from 650 to 700
-
+        
+        
+    #  fungsi untuk memilih file audio
     def select_audio_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Audio File", "", "WAV Files (*.wav)")
         if file_path:
             self.audio_path = file_path
             self.audio_path_label.setText(os.path.basename(file_path))
-
+     
+    # fungsi untuk memilih file stego
     def select_stego_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Stego Audio", "", "WAV Files (*.wav)")
         if file_path:
             self.stego_path = file_path
             self.stego_path_label.setText(os.path.basename(file_path))
 
+    # fungsi untuk memilih file kunci privat
     def select_private_key(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select Private Key", "", "PEM Files (*.pem)")
         if file_path:
             self.private_key_path = file_path
             self.key_path_label.setText(os.path.basename(file_path))
-
+            
+            
+    # fungsi untuk mengenkripsi teks
     def encrypt_text(self):
         try:
             text = self.text_input.toPlainText()
@@ -406,6 +413,8 @@ class SteganoGUI(QMainWindow):
         except Exception as e:
             self.encrypt_status.setText(f"Error: {str(e)}")
 
+    
+    # fungsi untuk menyisipkan QR ke dalam audio
     def embed_qr_into_audio(self):
         try:
             if not self.audio_path or not self.compressed_data:
@@ -419,6 +428,8 @@ class SteganoGUI(QMainWindow):
         except Exception as e:
             self.encrypt_status.setText(f"Error: {str(e)}")
 
+
+    # fungsi untuk mendekripsi data
     def decrypt_process(self):
         try:
             if not self.stego_path or not self.private_key_path:
@@ -466,6 +477,7 @@ class SteganoGUI(QMainWindow):
             self.decrypt_status.setText(f"Error: {str(e)}")
             self.decrypt_progress.setValue(0)  # Only reset progress bar on error
 
+# fungsi utama untuk menjalankan aplikasi
 def main():
     app = QApplication(sys.argv)
     window = SteganoGUI()

@@ -8,6 +8,7 @@ import os
 import cv2
 from pyzbar.pyzbar import decode
 
+# Fungsi untuk menghasilkan kunci RSA
 def generate_rsa_keys():
     private_key = rsa.generate_private_key(
         public_exponent=65537,
@@ -17,6 +18,7 @@ def generate_rsa_keys():
     public_key = private_key.public_key()
     return private_key, public_key
 
+# Fungsi untuk menampilkan kunci publik dan privat
 def display_keys(private_key, public_key, save_to_file=True):
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
@@ -34,6 +36,7 @@ def display_keys(private_key, public_key, save_to_file=True):
     print("===== PRIVATE KEY =====")
     print(private_pem.decode())
 
+    # Save keys to files if requested
     if save_to_file:
         # Save to Keys directory
         os.makedirs("Keys", exist_ok=True)
@@ -43,6 +46,7 @@ def display_keys(private_key, public_key, save_to_file=True):
             f.write(private_pem)
         print("\nKeys saved in 'Keys' directory")
 
+# Fungsi untuk mengenkripsi data menggunakan kunci publik
 def encrypt_data(public_key, data):
     ciphertext = public_key.encrypt(
         data.encode(),
@@ -54,6 +58,7 @@ def encrypt_data(public_key, data):
     )
     return ciphertext
 
+# Fungsi untuk membuat QR Code dari data
 def create_qr_code(data, filename='qr_code.png'):
     hex_data = data.hex()
     qr = qrcode.QRCode(
@@ -62,12 +67,14 @@ def create_qr_code(data, filename='qr_code.png'):
         box_size=10,
         border=4,
     )
+    
     qr.add_data(hex_data)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
     img.save(filename)
     return filename
 
+# Fungsi untuk memproses gambar QR Code menjadi format yang dapat disimpan
 def process_qr_image(image_path):
     img = Image.open(image_path).convert('1')
     width, height = img.size
@@ -77,6 +84,7 @@ def process_qr_image(image_path):
     compressed = zlib.compress(size_info + img_bytes)
     return compressed
 
+# Fungsi untuk mendekripsi data QR Code menggunakan kunci privat
 def decrypt_qr_data(private_key, compressed_data):
     try:
         decompressed = zlib.decompress(compressed_data)
@@ -116,6 +124,7 @@ def decrypt_qr_data(private_key, compressed_data):
         print(f"Decryption failed: {e}")
         return None
 
+# Fungsi untuk memuat kunci privat dari file
 def load_private_key(key_path):
     with open(key_path, "rb") as key_file:
         private_key = serialization.load_pem_private_key(
